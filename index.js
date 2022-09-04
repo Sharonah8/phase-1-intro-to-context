@@ -1,95 +1,82 @@
-// Your code here
+// // Your code here
 
-//populates a record from an Array
-
-function createEmployeeRecord(recordArray) {
-    const recordObject = {
-        firstName: recordArray[0],
-        familyName: recordArray[1],
-        title: recordArray[2],
-        payPerHour: recordArray[3],
+const createEmployeeRecord = function (record) {
+    return {
+        firstName: record[0],
+        familyName: record[1],
+        title: record[2],
+        payPerHour: record[3],
         timeInEvents: [],
-        timeOutEvents: [],
+        timeOutEvents: []
     }
-    return recordObject;
 }
 
-// const createEmployeeRecords = function (employeeDetails) {
-//     return employeeDetails.map(function (row) {
-//         return createEmployeeRecords(row)
-//     })
-// }
-
-
-//process an Array of Arrays into an Array of employee records
-
-function createEmployeeRecords(newArray) {
-    const newEmployeeArray = newArray.map(createEmployeeRecord);
-    return newEmployeeArray;
+const createEmployeeRecords = function (employeeDataInRow) {
+    return employeeDataInRow.map(function (record) {
+        return createEmployeeRecord(record)
+    })
 }
 
+let createTimeInEvent = function (employee, day) {
+    let [date, hour] = day.split(' ')
 
-//adds a timeIn event Object to an employee's record of 
-//timeInEvents when provided an employee record and 
-//Date/Time String and returns the updated record
-function createTimeInEvent(employeeDetails, date) {
-    const employeeTimeIn = {
+    employee.timeInEvents.push({
         type: "TimeIn",
-        hour: parseInt(date.split(" ")[1]),
-        date: date.split(" ")[0]
-    }
-    employeeDetails.timeInEvents.push(employeeTimeIn);
-    return employeeDetails;
-}
+        hour: parseInt(hour, 10),
+        date,
+    })
+    return employee;
+};
 
+function createTimeOutEvent(employee, day) {
+    let [date, hour] = day.split(' ')
 
-//adds a timeOut event Object to an employee's record of 
-//timeOutEvents when provided an employee record and 
-//Date/Time String and returns the updated record
-function createTimeOutEvent(employeeRecord, dateStamp) {
-    const employeeTimeOut = {
+    employee.timeOutEvents.push({
         type: "TimeOut",
-        hour: parseInt(dateStamp.split(" ")[1]),
-        date: dateStamp.split(" ")[0]
-    }
-    employeeRecord.timeOutEvents.push(employeeTimeOut);
-    return employeeRecord;
+        hour: parseInt(hour, 10),
+        date,
+    })
+    return employee
+}
+
+function hoursWorkedOnDate(employee, dateFind) {
+
+    let inEvent = employee.timeInEvents.find(function (e) {
+        return e.date === dateFind
+    })
+
+    let outEvent = employee.timeOutEvents.find(function (e) {
+        return e.date === dateFind
+    })
+
+    return (outEvent.hour - inEvent.hour) / 100
 }
 
 
-// function hoursWorkedOnDate(employeeRecord, employeeDate) {
-//     let employeeHours = {
-//         hour: parseInt(employeeDate.split(" ")[1])
-//     }
-//     return employeeHours;
-// }
-
-function hoursWorkedOnDate(employeeRecord, date) {
-    const gotIn = employeeRecord.timeInEvents.find(gotIn => gotIn.date === date);
-    const gotOut = employeeRecord.timeInEvents.find(gotOut => gotOut.date === date);
-    return (Math.abs(gotOut.hour - gotIn.hour) / 100);
+function findEmployeeByFirstName(srcArray, firstName) {
+    return srcArray.find(function (rec) {
+        return rec.firstName === firstName
+    })
 }
 
-function wagesEarnedOnDate(employeeRecord, date) {
-    return hoursWorkedOnDate(employeeRecord, date) * employeeRecord.payPerHour;
+function calculatePayroll(arrayOfEmployeeRecords) {
+    return arrayOfEmployeeRecords.reduce(function (memo, rec) {
+        return memo + allWagesFor(rec)
+    }, 0)
 }
 
-function allWagesFor(employeeRecord) {
-    let wagesArray = [];
-    const dates = employeeRecord.timeInEvents.map(timeIn => timeIn.date)
-    for (let date of dates) {
-        wagesArray.push(wagesEarnedOnDate(employeeRecord, date));
-    }
-    return wagesArray.reduce((prev, curr) => prev + curr);
+function wagesEarnedOnDate(employee, dateFind) {
+    let rawWage = hoursWorkedOnDate(employee, dateFind) * employee.payPerHour
+    return parseFloat(rawWage.toString())
+};
+
+function allWagesFor(employee) {
+    const eligibleDates = employee.timeInEvents.map(function (e) {
+        return e.date
+    });
+
+    let payable = eligibleDates.reduce(function (memo, d) {
+        return memo + wagesEarnedOnDate(employee, d)
+    }, 0)
+    return payable;
 }
-
-
-
-function calculatePayroll(employeeArray) {
-    let sumOfPayOwed = employeeArray.map(obj => allWagesFor(obj))
-        .reduce((a, b) => (a = a + b), 0);
-
-    return sumOfPayOwed;
-}
-
-
